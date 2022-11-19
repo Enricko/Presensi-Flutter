@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:presensisekolah_flutter/Style/style.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
+
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
 
@@ -8,9 +10,32 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  bool isVisibility = false;
+  bool isVisibility = true;
   TextEditingController controllerEmail = TextEditingController();
   TextEditingController controllerPassword = TextEditingController();
+
+  login(BuildContext context){
+    var email = controllerEmail.text;
+    var password = controllerPassword.text;
+    if(email.isEmpty && password.isEmpty){
+      EasyLoading.showError('Please insert Email & Password',dismissOnTap: true);
+      return;
+    }else{
+      if (email.isEmpty) {
+        EasyLoading.showError('Please insert Email',dismissOnTap: true);
+        return;
+      }
+      if (password.isEmpty) {
+        EasyLoading.showError('Please insert Password',dismissOnTap: true);
+        return;
+      }
+    }
+    var data = {
+      "email": email,
+      "password": password,
+    };
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -79,22 +104,12 @@ class _HomePageState extends State<HomePage> {
                   height: 50,
                   child: ElevatedButton(
                       onPressed: () {
-                        // login(context);
+                        login(context);
                       },
                       child: Text(
                         'Login',
                         style: Style.h5,
                       )),
-                ),
-                TextButton(
-                  onPressed: () {
-                    // Navigator.of(context).push(
-                    //   MaterialPageRoute(
-                    //     builder: (context) => RegisterPage(),
-                    //   ),
-                    // );
-                  },
-                  child: Text("Don`t have an account? create here"),
                 ),
               ],
             ),
