@@ -1,23 +1,21 @@
 import 'package:flutter/material.dart';
-import 'package:presensisekolah_flutter/HomePage.dart';
+import 'package:presensisekolah_flutter/Login.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-void main() {
-  runApp(MainApp());
-}
+import 'Screen/HomePage.dart';
 
-class MainApp extends StatelessWidget {
-  const MainApp({Key? key}) : super(key: key);
 
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Presensi Flutter',
-      theme: ThemeData(
-        primaryColor: Colors.blue,
-      ),
-      home: HomePage(),
-      builder: EasyLoading.init(),
-    );
-  }
+Future<void> main() async{
+  WidgetsFlutterBinding.ensureInitialized();
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  var email=prefs.getString("email");
+  runApp(MaterialApp(
+    debugShowCheckedModeBanner: false,
+    title: 'Presensi Flutter',
+    theme: ThemeData(
+      primaryColor: Colors.blue,
+    ),
+    builder: EasyLoading.init(),
+    home: email==null?Login():HomePage()));
 }

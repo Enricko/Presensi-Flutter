@@ -1,16 +1,23 @@
+import 'package:email_validator/email_validator.dart';
 import 'package:flutter/material.dart';
 import 'package:presensisekolah_flutter/Style/style.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 
-class HomePage extends StatefulWidget {
-  const HomePage({Key? key}) : super(key: key);
+import 'Api/Api.dart';
+import 'Screen/HomePage.dart';
+import 'Screen/utils/alert.dart';
+import 'Screen/utils/login_pref.dart';
+
+class Login extends StatefulWidget {
+  const Login({Key? key}) : super(key: key);
 
   @override
-  State<HomePage> createState() => _HomePageState();
+  State<Login> createState() => _LoginState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _LoginState extends State<Login> {
   bool isVisibility = true;
+  String _errorMessage = '';
   TextEditingController controllerEmail = TextEditingController();
   TextEditingController controllerPassword = TextEditingController();
 
@@ -34,9 +41,37 @@ class _HomePageState extends State<HomePage> {
       "email": email,
       "password": password,
     };
+    Api.submitLogin(data).then(
+          (value) async {
+        //ketika pesan nya bukan successful
+        // print(value);
+        if (value.message != "success") {
+          //muncul error
+          await EasyLoading.showError('Email or Password is incorrect',dismissOnTap: true);
+          return;
+        }
+        LoginPref.saveToSharedPref(
+          value.data!.id!.toString(),
+          value.data!.name!,
+          value.data!.email!,
+        );
+
+        //cek apakah pref yang sudah di save, benar benar tersimpan?
+        if (await LoginPref.checkPref() == true) {
+          Alerts.showMessage("Login Success!", context);
+          //jika ya,maka kembali kehalaman semula
+          Navigator.of(context).pop();
+
+          //iduser dan username tampil di console
+          LoginPref.getPref().then((value) {
+            Navigator.of(context).push(
+              MaterialPageRoute(builder: (context) => HomePage())
+            );
+          });
+        }
+      },
+    );
   }
-
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -57,7 +92,13 @@ class _HomePageState extends State<HomePage> {
                   height: 20,
                 ),
                 TextFormField(
+                  keyboardType: TextInputType.emailAddress,
                   controller: controllerEmail,
+                  onChanged: (val){
+                    setState(() {
+                      validateEmail(val);
+                    });
+                  },
                   decoration: InputDecoration(
                     contentPadding: const EdgeInsets.all(15),
                     hintText: "Email",
@@ -67,6 +108,11 @@ class _HomePageState extends State<HomePage> {
                       borderRadius: BorderRadius.circular(30),
                     ),
                   ),
+                ),
+                if (_errorMessage != '')
+                Padding(
+                  padding: const EdgeInsets.only(top:3),
+                  child: Text(_errorMessage, style: TextStyle(color: Colors.red),),
                 ),
                 SizedBox(
                   height: 15,
@@ -117,5 +163,20 @@ class _HomePageState extends State<HomePage> {
         ),
       ),
     );
+  }
+  void validateEmail(String val) {
+    if(val.isEmpty){
+      setState(() {
+        _errorMessage = "Email can not be empty";
+      });
+    }else if(!EmailValidator.validate(val, true)){
+      setState(() {
+        _errorMessage = "Invalid Email Address";
+      });
+    }else{
+      setState(() {
+        _errorMessage = "";
+      });
+    }
   }
 }
