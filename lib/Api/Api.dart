@@ -1,7 +1,9 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:presensisekolah_flutter/Api/PresensiPost.dart';
 import 'package:presensisekolah_flutter/Api/UserProfile.dart';
+import 'LiburList.dart';
 import 'LoginUser.dart';
 import 'PresensiList.dart';
 
@@ -39,5 +41,27 @@ class Api{
     }
     // Jika error,maka kembalikan pesan error seperti di bawah ini
     throw "Gagal mengambil data user";
+  }
+  static Future<LiburList> liburList() async {
+    var url = BASE_URL + "liburs?token="+ TOKEN ;
+    final response = await http.get(Uri.parse(url));
+    // Cek apakah kode status adalah 200,200 artinya OK
+    if(response.statusCode == 200){
+      return LiburList.fromJson(jsonDecode(response.body));
+    }
+    // Jika error,maka kembalikan pesan error seperti di bawah ini
+    throw "Gagal mengambil data user";
+  }
+  static Future<PresensiPost> presensi(String qr,Map<String,String?>dataPresensi) async {
+    final response = await http.post(
+      Uri.parse("${qr}/android"),
+      body: dataPresensi,
+    );
+    if(response.statusCode == 200){
+      print('berhasil');
+      return PresensiPost.fromJson(jsonDecode(response.body));
+    }
+    // Jika error,maka kembalikan pesan error seperti di bawah ini
+    throw "Something went Wrong";
   }
 }

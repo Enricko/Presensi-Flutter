@@ -8,6 +8,7 @@ import 'package:presensisekolah_flutter/Screen/utils/login_pref.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../Api/PresensiList.dart';
+import '../Api/LiburList.dart' as libur;
 import '../Login.dart';
 
 
@@ -19,6 +20,9 @@ class Tanggal extends StatefulWidget {
 }
 
 class _TanggalState extends State<Tanggal> {
+  Color? bgColor = Colors.white;
+  Color? iconColor;
+
   DateTime _currentDate = DateTime.now();
   DateTime _currentDate2 = DateTime.now();
   String _currentMonth = DateFormat.yMMM().format(DateTime.now());
@@ -63,6 +67,7 @@ class _TanggalState extends State<Tanggal> {
     },
   );
   List<Data> listPresensi = [];
+  List<libur.Data> listLibur = [];
 
   String? id;
 
@@ -86,13 +91,15 @@ class _TanggalState extends State<Tanggal> {
           listPresensi = value.data!;
         });
       });
+      Api.liburList().then((value){
+        listLibur = value.data!;
+      });
     });
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
-
     return Column(
       children: [
         Container(
@@ -104,11 +111,11 @@ class _TanggalState extends State<Tanggal> {
               weekendTextStyle: TextStyle(
                 color: Colors.red,
               ),
+              todayBorderColor: Colors.grey,
+              todayButtonColor: Colors.transparent,
+              selectedDayBorderColor: Colors.grey,
+              selectedDayButtonColor: Colors.transparent,
               thisMonthDayBorderColor: Colors.grey,
-              //      weekDays: null, /// for pass null when you do not want to render weekDays
-              //      headerText: Container( /// Example for rendering custom header
-              //        child: Text('Custom Header'),
-              //      ),
               customDayBuilder: (
                   /// you can provide your own build function to make custom day containers
                   bool isSelectable,
@@ -125,21 +132,49 @@ class _TanggalState extends State<Tanggal> {
                 /// This way you can build custom containers for specific days only, leaving rest as default.
 
                 // Example: every 15th of month, we have a flight, we can place an icon in the container like that:
-                // listPresensi.forEach((element) {
-                //   if(){
-                //
-                //   }
-                // });
-
                 if (DateFormat('yyyy-MM-dd').format(day) == DateFormat('yyyy-MM-dd').format(DateTime.now())) {
-                  print(DateFormat('yyyy-MM-dd').format(day) == DateFormat('yyyy-MM-dd').format(DateTime.parse('2022-11-19')));
-                  return Center(
-                    child: Icon(
-                      Icons.people,
-                      color: Colors.white,
+                  for(var c = 0;c < listPresensi.length;c++){
+                    if(DateFormat('yyyy-MM-dd').format(day) == DateFormat('yyyy-MM-dd').format(DateTime.parse(listPresensi[c].createdAt!))){
+                      if(listPresensi[c].status == 'hadir'){
+                        bgColor = Colors.green;
+                        break;
+                      }else if(listPresensi[c].status == 'izin'){
+                        bgColor = Colors.yellow;
+                        break;
+                      }else if(listPresensi[c].status == 'bolos' || listPresensi[c].status == 'alpha'){
+                        bgColor = Colors.redAccent;
+                        break;
+                      }
+                    }
+                  }
+                  return Container(
+                    decoration: BoxDecoration(
+                      color: bgColor,
+                    ),
+                    child: Center(
+                      child: Icon(
+                        Icons.person,
+                        color: Colors.black,
+                      ),
                     ),
                   );
                 } else {
+                  for(var l = 0; l < listLibur.length;l++){
+                    DateTime dt1 = DateTime.parse(listLibur[l].liburMulai!);
+                    DateTime dt2 = DateTime.parse(listLibur[l].liburSampai!);
+                    var dayStart = DateTime(dt1.year,dt1.month,dt1.day - 1);
+                    var dayFinish = DateTime(dt2.year,dt2.month,dt2.day + 1);
+                    if(day.isAfter(dayStart) && day.isBefore(dayFinish)){
+                      return Center(
+                        child: Text(
+                          '${day.day}',
+                          style: TextStyle(
+                            color: Colors.red
+                          ),
+                        ),
+                      );
+                    }
+                  }
                   for(var i = 0; i < listPresensi.length; i++) {
                     if(DateFormat('yyyy-MM-dd').format(day) == DateFormat('yyyy-MM-dd').format(DateTime.parse(listPresensi[i].createdAt!))){
                       if(listPresensi[i].status == 'hadir'){
@@ -160,19 +195,21 @@ class _TanggalState extends State<Tanggal> {
                       if(listPresensi[i].status == 'izin'){
                         return Container(
                           decoration: BoxDecoration(
-                            color: Colors.yellow
+                              color: Colors.yellow
                           ),
                           child: Center(
                             child: Text(
                               "${day.day}",
                               style: TextStyle(
-                                color:Colors.black
+                                  color:Colors.black
                               ),
                             ),
                           ),
-                       );
+                        );
                       }
                       if(listPresensi[i].status == 'alpha' && listPresensi[i].status == 'bolos'){
+                        if(DateFormat('yyyy-MM-dd').format(DateTime.now()) == DateFormat('yyyy-MM-dd').format(DateTime.parse(listPresensi[i].createdAt!))){
+                        }
                         return Container(
                           decoration: BoxDecoration(
                               color: Colors.redAccent
@@ -201,17 +238,6 @@ class _TanggalState extends State<Tanggal> {
               /// null for not rendering any border, true for circular border, false for rectangular border
             ),
           ),
-        // SizedBox(
-        //   height: 200,
-        //   child: ListView.builder(
-        //     physics: NeverScrollableScrollPhysics(),
-        //     itemCount: 8,
-        //     itemBuilder: (BuildContext context, index){
-        //       print(listPresensi);
-        //       return Text(listPresensi[index].time!);
-        //     }
-        //   ),
-        // )
       ],
     );
   }

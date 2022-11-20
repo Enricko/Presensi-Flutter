@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
 import 'package:flutter_calendar_carousel/classes/event_list.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:geocoding/geocoding.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:presensisekolah_flutter/Api/UserProfile.dart';
 import 'package:presensisekolah_flutter/Screen/utils/alert.dart';
 import 'package:presensisekolah_flutter/Screen/utils/login_pref.dart';
@@ -9,6 +12,7 @@ import 'package:presensisekolah_flutter/Style/style.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../Api/Api.dart';
+import '../Api/PresensiPost.dart';
 import '../Login.dart';
 import 'Tanggal.dart';
 
@@ -22,7 +26,65 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   Future<UserProfile>? userView;
   String? id;
-  String _scanBarcode = 'Unknown';
+  String _scanBarcode = "";
+
+  String? _currentAddress;
+  Position? _currentPosition;
+
+  Future<bool> _handleLocationPermission() async {
+    bool serviceEnabled;
+    LocationPermission permission;
+
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Tolong Nyalakan GPS-nya')));
+      return false;
+    }
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Location permissions are denied')));
+        return false;
+      }
+    }
+    if (permission == LocationPermission.deniedForever) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text(
+              'Location permissions are permanently denied, we cannot request permissions.')));
+      return false;
+    }
+    return true;
+  }
+
+  Future<void> _getCurrentPosition() async {
+    final hasPermission = await _handleLocationPermission();
+
+    if (!hasPermission) return;
+    await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high)
+        .then((Position position) {
+      setState(() => _currentPosition = position);
+      _getAddressFromLatLng(_currentPosition!);
+    }).catchError((e) {
+      debugPrint(e);
+    });
+  }
+
+  Future<void> _getAddressFromLatLng(Position position) async {
+    await placemarkFromCoordinates(
+            _currentPosition!.latitude, _currentPosition!.longitude)
+        .then((List<Placemark> placemarks) {
+      Placemark place = placemarks[0];
+      setState(() {
+        _currentAddress =
+            '${place.street}, ${place.subLocality}, ${place.subAdministrativeArea}, ${place.postalCode}';
+      });
+    }).catchError((e) {
+      debugPrint(e);
+    });
+  }
 
   Future user() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -37,11 +99,39 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
+  presensiUser() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    var DataUser = await LoginPref.getPref();
+    setState(() {
+      id = DataUser.id;
+    });
+    if (_scanBarcode != "") {
+      var dataPresensi = {
+        "user_id": id!,
+        "lat": _currentPosition?.latitude.toString(),
+        "long": _currentPosition?.longitude.toString(),
+      };
+      Api.presensi(_scanBarcode, dataPresensi).then((value) {
+        if (value.message! == "Berhasil di scan") {
+          EasyLoading.showSuccess(value.message!, dismissOnTap: true);
+        } else {
+          EasyLoading.showError(value.message!, dismissOnTap: true);
+        }
+      }).catchError((error) {
+        EasyLoading.showError(error, dismissOnTap: true);
+      });
+    }
+  }
+
   @override
   void initState() {
     user().then((value) {
       userView = Api.userView(id!);
     });
+    _getCurrentPosition();
+    // presensiUser().then((value){
+    //   Api.presensi(_scanBarcode, presensi!);
+    // });
     super.initState();
   }
 
@@ -51,7 +141,6 @@ class _HomePageState extends State<HomePage> {
     try {
       barcodeScanRes = await FlutterBarcodeScanner.scanBarcode(
           '#ff6666', 'Cancel', true, ScanMode.QR);
-      print(barcodeScanRes);
     } on PlatformException {
       barcodeScanRes = 'Failed to get platform version.';
     }
@@ -63,6 +152,7 @@ class _HomePageState extends State<HomePage> {
 
     setState(() {
       _scanBarcode = barcodeScanRes;
+      presensiUser();
     });
   }
 
@@ -160,8 +250,8 @@ class _HomePageState extends State<HomePage> {
                       ),
                       GestureDetector(
                         onTap: () => scanQR(),
-                        child: Image.network(
-                          'https://cdn.osxdaily.com/wp-content/uploads/2022/04/qr-code-example.jpg',
+                        child: Image(
+                          image: AssetImage('images/scan.PNG'),
                           height: 100,
                           width: 100,
                           loadingBuilder: (context, obj, stacktrace) {

@@ -4,9 +4,12 @@ import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'Screen/HomePage.dart';
+import 'Screen/utils/SplashScreen.dart';
 
-
-Future<void> main() async{
+void main(){
+  runApp(SplashScreen());
+}
+Future<void> mains() async{
   WidgetsFlutterBinding.ensureInitialized();
   SharedPreferences prefs = await SharedPreferences.getInstance();
   var email=prefs.getString("email");
