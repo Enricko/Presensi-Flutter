@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
+import 'package:flutter_calendar_carousel/classes/event_list.dart';
 import 'package:presensisekolah_flutter/Api/UserProfile.dart';
 import 'package:presensisekolah_flutter/Screen/utils/alert.dart';
 import 'package:presensisekolah_flutter/Screen/utils/login_pref.dart';
+import 'package:presensisekolah_flutter/Style/style.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../Api/Api.dart';
 import '../Login.dart';
+import 'Tanggal.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -22,6 +25,12 @@ class _HomePageState extends State<HomePage> {
   String _scanBarcode = 'Unknown';
 
   Future user() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    var email = prefs.getString('email');
+    if (email == null) {
+      Navigator.of(context)
+          .pushReplacement(MaterialPageRoute(builder: (context) => Login()));
+    }
     var DataUser = await LoginPref.getPref();
     setState(() {
       id = DataUser.id;
@@ -63,7 +72,7 @@ class _HomePageState extends State<HomePage> {
     print('logout');
     Alerts.showMessage("Logout Success!", context);
     Navigator.of(context)
-        .push(MaterialPageRoute(builder: (context) => Login()));
+        .pushReplacement(MaterialPageRoute(builder: (context) => Login()));
   }
 
   @override
@@ -104,100 +113,114 @@ class _HomePageState extends State<HomePage> {
     var image_default = "https://presensi.enricko.com/assets/image/user.png";
     var image_baseUrl = "https://presensi.enricko.com/image/profile/" +
         data.level! +
+        '/' +
         data.imageProfile!;
     return Container(
       width: 300,
       margin: EdgeInsets.symmetric(vertical: 25),
       decoration: BoxDecoration(
           color: Colors.white, borderRadius: BorderRadius.circular(10)),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: EdgeInsets.all(20),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(50),
-                  child: Image.network(
-                    data.imageProfile! == null
-                        ? "${image_default}"
-                        : "${image_baseUrl}",
-                    height: 100,
-                    width: 100,
-                    loadingBuilder: (context, obj, stacktrace) {
-                      if (stacktrace == null) {
-                        return obj;
-                      }
-                      return Center(
-                        child: CircularProgressIndicator(),
-                      );
-                    },
-                    errorBuilder: (context, obj, stacktrace) {
-                      return Image.network(
-                        "${image_default}",
-                        height: 100,
-                        width: 100,
-                      );
-                    },
+      child: SingleChildScrollView(
+        child: Column(
+          children: [
+            Container(
+              decoration: BoxDecoration(color: Colors.black12),
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Container(
+                        padding: EdgeInsets.all(20),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(50),
+                          child: Image.network(
+                            data.imageProfile! == null
+                                ? "${image_default}"
+                                : "${image_baseUrl}",
+                            height: 100,
+                            width: 100,
+                            loadingBuilder: (context, obj, stacktrace) {
+                              if (stacktrace == null) {
+                                return obj;
+                              }
+                              return Center(
+                                child: CircularProgressIndicator(),
+                              );
+                            },
+                            errorBuilder: (context, obj, stacktrace) {
+                              return Image.network(
+                                "${image_default}",
+                                height: 100,
+                                width: 100,
+                              );
+                            },
+                          ),
+                        ),
+                      ),
+                      GestureDetector(
+                        onTap: () => scanQR(),
+                        child: Image.network(
+                          'https://cdn.osxdaily.com/wp-content/uploads/2022/04/qr-code-example.jpg',
+                          height: 100,
+                          width: 100,
+                          loadingBuilder: (context, obj, stacktrace) {
+                            if (stacktrace == null) {
+                              return obj;
+                            }
+                            return Center(
+                              child: CircularProgressIndicator(),
+                            );
+                          },
+                        ),
+                      ),
+                      // ElevatedButton(
+                      //     onPressed: () => scanQR(),
+                      //     child: Text('Start QR scan')
+                      // ),
+                    ],
                   ),
-                ),
+                  if (data.level! == 'siswa')
+                    Row(
+                      children: [
+                        Container(
+                            margin: EdgeInsets.only(left: 15),
+                            child: Text(data.nisn!)),
+                      ],
+                    ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Container(
+                          margin: EdgeInsets.only(left: 15),
+                          child: Text(
+                            data.name!,
+                            style: Style.h4,
+                          )),
+                      // Button Logout
+                      Container(
+                        margin: EdgeInsets.only(right: 15),
+                        child: ElevatedButton(
+                          onPressed: () {
+                            logout(context);
+                          },
+                          child: Text('Logout'),
+                        ),
+                      )
+                    ],
+                  ),
+                ],
               ),
-              SizedBox(
-                width: 50,
-              ),
-              GestureDetector(
-                onTap: () => scanQR(),
-                child: Image.network(
-                  'https://cdn.osxdaily.com/wp-content/uploads/2022/04/qr-code-example.jpg',
-                  height: 100,
-                  width: 100,
-                  loadingBuilder: (context, obj, stacktrace) {
-                    if (stacktrace == null) {
-                      return obj;
-                    }
-                    return Center(
-                      child: CircularProgressIndicator(),
-                    );
-                  },
-                ),
-              ),
-              // ElevatedButton(
-              //     onPressed: () => scanQR(),
-              //     child: Text('Start QR scan')
-              // ),
-            ],
-          ),
-          if (data.level! == 'siswa')
-          Row(
-            children: [
-              Container(
-                margin: EdgeInsets.only(left: 15),
-                child: Text(data.nisn!)
-              ),
-            ],
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Container(
-                margin: EdgeInsets.only(left: 15),
-                child: Text(data.name!)
-              ),
-              // Button Logout
-              Container(
-                margin: EdgeInsets.only(right: 15),
-                child: ElevatedButton(
-                  onPressed: (){
-                    logout(context);
-                  },
-                  child: Text('Logout'),
-                ),
-              )
-            ],
-          ),
-        ],
+            ),
+            Divider(
+              thickness: 3,
+              height: 3,
+              color: Colors.black,
+            ),
+            Tanggal(),
+          ],
+        ),
       ),
     );
   }
 }
-

@@ -74,90 +74,106 @@ class _LoginState extends State<Login> {
   }
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(
-        child: Center(
-          child: Container(
-            margin: EdgeInsets.symmetric(horizontal: 50),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  child: Text(
-                    "Login",
-                    style: Style.h2,
-                  ),
-                ),
-                SizedBox(
-                  height: 20,
-                ),
-                TextFormField(
-                  keyboardType: TextInputType.emailAddress,
-                  controller: controllerEmail,
-                  onChanged: (val){
-                    setState(() {
-                      validateEmail(val);
-                    });
-                  },
-                  decoration: InputDecoration(
-                    contentPadding: const EdgeInsets.all(15),
-                    hintText: "Email",
-                    labelText: "Email",
-                    border: OutlineInputBorder(
-                      borderSide: BorderSide(width: 3),
-                      borderRadius: BorderRadius.circular(30),
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Color(0xeb00003d), Color(0xfc0a0a77)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        )
+      ),
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        body: SafeArea(
+          child: Center(
+            child: Container(
+              height: 500,
+              margin: EdgeInsets.symmetric(horizontal: 25),
+              padding: EdgeInsets.symmetric(horizontal: 35),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(50)
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    child: Text(
+                      "Login",
+                      style: Style.h2,
                     ),
                   ),
-                ),
-                if (_errorMessage != '')
-                Padding(
-                  padding: const EdgeInsets.only(top:3),
-                  child: Text(_errorMessage, style: TextStyle(color: Colors.red),),
-                ),
-                SizedBox(
-                  height: 15,
-                ),
-                TextFormField(
-                  controller: controllerPassword,
-                  obscureText: isVisibility,
-                  decoration: InputDecoration(
-                    contentPadding: const EdgeInsets.all(15),
-                    hintText: "Password",
-                    labelText: "Password",
-                    suffixIcon: IconButton(
-                      icon: isVisibility == true
-                          ? Icon(Icons.visibility_off)
-                          : Icon(Icons.visibility),
-                      onPressed: () {
-                        setState(() {
-                          // Memeberikan nilai pada variable isVisibility
-                          // dengan nilai balikan dari nilai is inVisibility sebelumnya
-                          isVisibility = !isVisibility;
-                        });
-                      },
-                    ),
-                    border: OutlineInputBorder(
-                      borderSide: BorderSide(width: 3),
-                      borderRadius: BorderRadius.circular(30),
+                  SizedBox(
+                    height: 20,
+                  ),
+                  TextFormField(
+                    keyboardType: TextInputType.emailAddress,
+                    controller: controllerEmail,
+                    onChanged: (val){
+                      setState(() {
+                        validateEmail(val);
+                      });
+                    },
+                    decoration: InputDecoration(
+                      contentPadding: const EdgeInsets.all(15),
+                      hintText: "Email",
+                      labelText: "Email",
+                      border: OutlineInputBorder(
+                        borderSide: BorderSide(width: 3),
+                        borderRadius: BorderRadius.circular(30),
+                      ),
                     ),
                   ),
-                ),
-                SizedBox(
-                  height: 15,
-                ),
-                SizedBox(
-                  width: 300,
-                  height: 50,
-                  child: ElevatedButton(
-                      onPressed: () {
-                        login(context);
-                      },
-                      child: Text(
-                        'Login',
-                        style: Style.h5,
-                      )),
-                ),
-              ],
+                  if (_errorMessage != '')
+                  Padding(
+                    padding: const EdgeInsets.only(top:3),
+                    child: Text(_errorMessage, style: TextStyle(color: Colors.red),),
+                  ),
+                  SizedBox(
+                    height: 15,
+                  ),
+                  TextFormField(
+                    controller: controllerPassword,
+                    obscureText: isVisibility,
+                    decoration: InputDecoration(
+                      contentPadding: const EdgeInsets.all(15),
+                      hintText: "Password",
+                      labelText: "Password",
+                      suffixIcon: IconButton(
+                        icon: isVisibility == true
+                            ? Icon(Icons.visibility_off)
+                            : Icon(Icons.visibility),
+                        onPressed: () {
+                          setState(() {
+                            // Memeberikan nilai pada variable isVisibility
+                            // dengan nilai balikan dari nilai is inVisibility sebelumnya
+                            isVisibility = !isVisibility;
+                          });
+                        },
+                      ),
+                      border: OutlineInputBorder(
+                        borderSide: BorderSide(width: 3),
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                    ),
+                  ),
+                  SizedBox(
+                    height: 15,
+                  ),
+                  SizedBox(
+                    width: 300,
+                    height: 50,
+                    child: ElevatedButton(
+                        onPressed: () {
+                          login(context);
+                        },
+                        child: Text(
+                          'Login',
+                          style: Style.h5,
+                        )),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
